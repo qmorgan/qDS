@@ -89,7 +89,7 @@ class MegaDF(object):
             nitems = len(col_name_list)
             if plotmad5:
                 nitems *= 2  # Double number if plotting mad-removed
-            nextra = (nitems + 2) / 3  # Keep max of 3 rows
+            nextra = (nitems + 2) // 3  # Keep max of 3 rows
             gss = gs.GridSpec(3, 3+nextra)  # nrows, ncols
             # Make wider as adding info
             fig = plt.figure(figsize=(8+2*nextra, 6))
@@ -108,7 +108,7 @@ class MegaDF(object):
                 '#c0392b',
                 '#2980b9',
                 '#27ae60',
-                '#9b59b6'] * ((len(col_name_list)+2)/3)
+                '#9b59b6'] * ((len(col_name_list)+2)//3)
 
         force_categorical = False
 
@@ -116,7 +116,7 @@ class MegaDF(object):
         axind = 0
         for col in col_name_list:
             if verbose:
-                print 'Plotting {}'.format(col)
+                print ('Plotting {}'.format(col))
 
             try:
                 color = colors[count]
@@ -172,17 +172,17 @@ class MegaDF(object):
 
             if not force_categorical:
                 res = ax.hist(series.values, bins=bins, alpha=0.2,
-                              edgecolor='none', normed=False,
+                              edgecolor='none', density=False,
                               histtype='stepfilled', color=color)
                 if not plotmad5:
                     res = ax.hist(series.values, bins=bins, alpha=0.92,
-                                  linewidth=3, normed=False, histtype='step',
+                                  linewidth=3, density=False, histtype='step',
                                   label=label, color=color)
                 else:  # Attempt to plotmad5
                     if hasattr(self, 'maddict'):
                         if col in self.maddict:
                             res = ax.hist(self.maddict[col].values, bins=bins,
-                                          alpha=1.0, linewidth=2, normed=False,
+                                          alpha=1.0, linewidth=2, density=False,
                                           histtype='step', color=color)
                         else:
                             if verbose:
@@ -200,7 +200,7 @@ class MegaDF(object):
                     if plotmad5:
                         types += ['mad5']
                     for typename in types:
-                        tripcount = axind / 3
+                        tripcount = axind // 3
                         # frameon=False turns off just the background and edges
                         # set_axis_off gets rid of ticks, ticklabels, edges
                         tmpax = fig.add_subplot(
@@ -271,7 +271,7 @@ class MegaDF(object):
 
                         else:
                             if verbose:
-                                print '  {0} Not in aggdict'.format(series.name)
+                                print ('  {0} Not in aggdict'.format(series.name))
 
                         axdict.update({axstr: tmpax})
                         axind += 1
@@ -287,7 +287,7 @@ class MegaDF(object):
 
             else:  # If force_categorical, try plotting a bar chart
                 msg = "  Categorical plotting not yet fully implemented"
-                print msg
+                print( msg)
                 # ax.text(0.5, 0.5, msg, transform=ax.transAxes, fontsize=13,
                 #     verticalalignment='top', horizontalalignment='center',
                 #     color='red')
@@ -306,6 +306,7 @@ class MegaDF(object):
                 count += 1
                 
 
+        ax.axvline(0, lw=0.5, color='black')
         fig.tight_layout()
         if suptitle:
             fig.subplots_adjust(top=0.90)
@@ -326,7 +327,7 @@ class MegaDF(object):
                     suptitle=colstr)
                 self.fig.savefig("{0}{1}.png".format(saveto, colstr), dpi=dpi)
             except:
-                print "Cannot plot " + colstr
+                print ("Cannot plot " + colstr)
 
 
 def qcut_and_replace(df, colname, outcolname, nbins=8, precision=2):
@@ -812,7 +813,7 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
     if type(column_dict_or_list) is not dict:
         # if None, use all columns to make dict
         if column_dict_or_list is None:
-            print "Column config not specified, using defaults on all columns"
+            print ("Column config not specified, using defaults on all columns")
             column_dict_or_list = df.columns
         # If not provided with dict, try making empty dictionary of list items
         coldict = dict(
@@ -830,7 +831,7 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
     # clean dictionary and find number of axes to plot
     cols_to_plot = {}
     axes_to_adjust = {}
-    for colname, colvals in coldict.iteritems():
+    for colname, colvals in coldict.items():
         if colname in df:
 
             # defaults to use if not specified by user
@@ -843,7 +844,7 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
                 'lw': 0
             }
             # custom vals
-            for kw in kwdict.iterkeys():
+            for kw in kwdict.keys():
                 if kw in colvals:
                     kwdict.update({kw: colvals[kw]})
 
@@ -857,7 +858,7 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
                             'title': '',
                             'ylim': None,
                             'legend': 1}
-                for kw in axkwdict.iterkeys():
+                for kw in axkwdict.keys():
                     if kw in colvals:
                         axkwdict.update({kw: colvals[kw]})
 
@@ -868,14 +869,14 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
             naxes = max((naxes, kwdict['ax_id'] + 1))
             count += 1
         else:
-            print "Warning: '{}' not in dataframe. Skipping.".format(colname)
+            print ("Warning: '{}' not in dataframe. Skipping.".format(colname))
 
     fig = plt.figure(figsize=(16, 2.375*naxes))
     fig.subplots_adjust(hspace=0.2)
 
     axlist = [fig.add_subplot(naxes, 1, nn) for nn in (range(1, naxes+1))]
 
-    for colname, col in cols_to_plot.iteritems():
+    for colname, col in cols_to_plot.items():
         df[colname].plot(ax=axlist[col['ax_id']],
                          lw=col['lw'],
                          marker=col['marker'],
@@ -883,9 +884,9 @@ def MultiTimeseries(df, column_dict_or_list=None, title=None):
                          label=col['label'],
                          color=col['color'])
 
-    for axid, axkws in axes_to_adjust.iteritems():
+    for axid, axkws in axes_to_adjust.items():
         ax = axlist[axid]
-        for kw, val in axkws.iteritems():
+        for kw, val in axkws.items():
             if val:
                 if kw == 'title':
                     ax.set_title(val)
