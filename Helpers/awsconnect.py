@@ -28,7 +28,7 @@ class S3Conn(object):
         try:
             self.bucket = self.conn.get_bucket(self.bucket_name)
         except:
-            print "Bucket {} not found.".format(bucket_name)
+            print("Bucket {} not found.".format(bucket_name))
     
     def ls_keys(self, contains=''):
         '''
@@ -36,7 +36,7 @@ class S3Conn(object):
         '''
         for key in self.bucket.list():
             if contains in key.name:
-                print key.name.encode('utf-8')
+                print(key.name.encode('utf-8'))
     
     def csv_to_df(self, s3path):
         '''
@@ -46,7 +46,7 @@ class S3Conn(object):
         mykey = self.bucket.get_key(self.s3path)
     
         if mykey is None:
-            print 's3path {} does not exist. Returning None.'.format(s3path)
+            print('s3path {} does not exist. Returning None.'.format(s3path))
             return None
     
         # generate a temporary signed url to access the data
@@ -61,4 +61,4 @@ def demo():
     s3path = 'path/to/data.csv'
     s3 = S3Conn()
     df = s3.csv_to_df(s3path)
-    print df.head()
+    print(df.head())

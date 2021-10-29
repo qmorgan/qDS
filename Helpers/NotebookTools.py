@@ -139,8 +139,8 @@ class Paths:
     def __init__(self, usecase_name):
         # Check if the env var is set that says where the data is stored
         if "ALBEADO_DATA" not in os.environ:
-            print "You need to set the environment variable ALBEADO_DATA"
-            print "to point to the path where your albeado data is stored"
+            print("You need to set the environment variable ALBEADO_DATA")
+            print("to point to the path where your albeado data is stored")
             raise Exception
         # Paths
         self.usecase_name = usecase_name.strip()
@@ -177,12 +177,12 @@ class Paths:
             setattr(self, name, pathstr)
             self.pathdict.update({name: pathstr})
         elif overwrite is True:
-            print "WARNING: {} already defined".format(name)
-            print " but overwrite == True; overwriting"
+            print("WARNING: {} already defined".format(name))
+            print(" but overwrite == True; overwriting")
             setattr(self, name, pathstr)
             self.pathdict.update({name: pathstr})
         else:
-            print "WARNING: {} already defined; not overwriting".format(name)
+            print("WARNING: {} already defined; not overwriting".format(name))
             pathstr = getattr(self, name)
         if check:
             self.check(checklist=[pathstr], create=create)
@@ -213,7 +213,7 @@ class Paths:
             setattr(self, name, pathstr)
             self.pathdict.update({name: pathstr})
         else:
-            print "WARNING: {} already defined. Not overwriting".format(name)
+            print("WARNING: {} already defined. Not overwriting".format(name))
             pathstr = getattr(self, name)
         if check:
             self.check(checklist=[pathstr], create=False)
@@ -230,26 +230,26 @@ class Paths:
             exist.
         '''
         if checklist is not None:
-            iters = zip(['path']*len(checklist), checklist)
+            iters = list(zip(['path']*len(checklist), checklist))
         else:
-            iters = self.pathdict.iteritems()
+            iters = iter(self.pathdict.items())
 
         for name, path in iters:
             if not os.path.exists(path):
-                print "PATH {} DOES NOT EXIST.".format(path)
+                print("PATH {} DOES NOT EXIST.".format(path))
 
                 if create:
-                    print "  * Trying to create it.."
+                    print("  * Trying to create it..")
                     try:
                         os.mkdir(path)
-                        print "  * Successfully created empty directory:"
-                        print "    {}: {}".format(name, path)
+                        print("  * Successfully created empty directory:")
+                        print("    {}: {}".format(name, path))
                     except:
-                        print "  * ERROR: Cannot create {}".format(path)
+                        print("  * ERROR: Cannot create {}".format(path))
                 else:
-                    print " create = False; Not trying to create it. "
+                    print(" create = False; Not trying to create it. ")
             else:
-                print "{}: {} (successfully initialized)\n".format(name, path)
+                print("{}: {} (successfully initialized)\n".format(name, path))
 
 
 def print_memory():
@@ -280,8 +280,8 @@ def print_memory():
             ret['free'] = tmp
             ret['used'] = int(ret['total']) - int(ret['free'])
 
-        for key, val in ret.iteritems():
-            print "{0}: {1:.3f} GB".format(key, val/1e6)
+        for key, val in ret.items():
+            print("{0}: {1:.3f} GB".format(key, val/1e6))
 
     except IOError:
-        print "Cannot access /proc/meminfo. Are you on linux?"
+        print("Cannot access /proc/meminfo. Are you on linux?")

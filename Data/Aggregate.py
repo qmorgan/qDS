@@ -51,11 +51,11 @@ def replace_values(series, rule_dict):
     else:
         raise ValueError("Invalid operator in rule_dict!")
 
-    print "  *** Replacing {0} values that are {1} {2} with {3}".format(
+    print("  *** Replacing {0} values that are {1} {2} with {3}".format(
         len(series.loc[wheretrue]),
         rule_dict['operator'],
         rule_dict['comparison_val'],
-        rule_dict['replace_val'])
+        rule_dict['replace_val']))
 
     series.loc[wheretrue] = rule_dict['replace_val']
 
@@ -180,7 +180,7 @@ def forgetting_factor(qdf, const=1, power=-1):
     recent ones. '''
     t_deltas = qdf['t_deltas']
     if (t_deltas <= 0).any():  # If any are <= 0, raise warning
-        print "Warning: t_deltas contains non-positive values."
+        print("Warning: t_deltas contains non-positive values.")
     return (const*t_deltas)**power
 
 
@@ -201,17 +201,17 @@ def example_1():
                  weight_fn=forgetting_factor)
     qs.SampleMean()
     qs.WeightedMean()
-    print qs.df
-    print "\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N)
-    print "Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
-                                                    qs.std_of_mean)
-    print "Sample STD: {0:.3f}".format(qs.sample_std)
-    print "Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
-                                                      qs.std_of_weighted_mean)
-    print "Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std)
-    print "\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean())
-    print "             std is:   {0:.3f}".format(qs.df.vals_raw.std())
-    print "             median is {0:.3f}".format(qs.df.vals_raw.median())
+    print(qs.df)
+    print("\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N))
+    print("Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
+                                                    qs.std_of_mean))
+    print("Sample STD: {0:.3f}".format(qs.sample_std))
+    print("Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
+                                                      qs.std_of_weighted_mean))
+    print("Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std))
+    print("\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean()))
+    print("             std is:   {0:.3f}".format(qs.df.vals_raw.std()))
+    print("             median is {0:.3f}".format(qs.df.vals_raw.median()))
 
 
 def example_2():
@@ -226,17 +226,17 @@ def example_2():
                  weight_fn=weight_by_uncertainty)
     qs.SampleMean()
     qs.WeightedMean()
-    print qs.df
-    print "\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N)
-    print "Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
-                                                    qs.std_of_mean)
-    print "Sample STD: {0:.3f}".format(qs.sample_std)
-    print "Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
-                                                      qs.std_of_weighted_mean)
-    print "Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std)
-    print "\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean())
-    print "             std is:   {0:.3f}".format(qs.df.vals_raw.std())
-    print "             median is {0:.3f}".format(qs.df.vals_raw.median())
+    print(qs.df)
+    print("\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N))
+    print("Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
+                                                    qs.std_of_mean))
+    print("Sample STD: {0:.3f}".format(qs.sample_std))
+    print("Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
+                                                      qs.std_of_weighted_mean))
+    print("Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std))
+    print("\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean()))
+    print("             std is:   {0:.3f}".format(qs.df.vals_raw.std()))
+    print("             median is {0:.3f}".format(qs.df.vals_raw.median()))
 
 
 def example_3():
@@ -252,14 +252,14 @@ def example_3():
                  weight_fn=no_weight)
     qs.SampleMean()
     qs.WeightedMean()
-    print qs.df
-    print "\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N)
-    print "Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
-                                                    qs.std_of_mean)
-    print "Sample STD: {0:.3f}".format(qs.sample_std)
-    print "Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
-                                                      qs.std_of_weighted_mean)
-    print "Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std)
-    print "\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean())
-    print "             std is:   {0:.3f}".format(qs.df.vals_raw.std())
-    print "             median is {0:.3f}".format(qs.df.vals_raw.median())
+    print(qs.df)
+    print("\nTotal inputs: {} ({} valid)".format(qs.N_raw, qs.N))
+    print("Sample Mean: {0:.3f} +/- {1:.3f}".format(qs.sample_mean,
+                                                    qs.std_of_mean))
+    print("Sample STD: {0:.3f}".format(qs.sample_std))
+    print("Weighted Mean: {0:.3f} +/- {1:.3f}".format(qs.weighted_sample_mean,
+                                                      qs.std_of_weighted_mean))
+    print("Weighted Sample STD: {0:.3f}".format(qs.weighted_sample_std))
+    print("\nOn raw data, mean is:  {0:.3f}".format(qs.df.vals_raw.mean()))
+    print("             std is:   {0:.3f}".format(qs.df.vals_raw.std()))
+    print("             median is {0:.3f}".format(qs.df.vals_raw.median()))

@@ -30,9 +30,9 @@ class MegaDF(object):
         '''
         Generage the aggdict() attribute, which contains aggregate statistitcs
         for the dataframe that will not have to be recalculated.
-        
-        If class_col specified, split dataframe into different columns 
-        based on the column name.  TODO: This is not a great way to split things up.. 
+
+        If class_col specified, split dataframe into different columns
+        based on the column name.  TODO: This is not a great way to split things up..
         '''
         # TODO: Store different stats depending if float, int, str, etc
         if class_col != None:
@@ -75,10 +75,14 @@ class MegaDF(object):
 
     def pdhist(self, col_name_list, colors=None, labels=None, bins=None,
                nbins=50, fancylegend=False, plotmad5=False, suptitle=None,
-               verbose=False, plot_row_span=3):
+               verbose=False, plot_row_span=3, dropna=False,
+               force_categorical=False):
         '''
         Given a list of pandas series, plot aligned histograms along with a
         legend giving descriptive statistics of the populations.
+        If dropna: drop any NaN values.  Not doing this might cause errors if
+
+        there are nulls.
 
         TODO: change series_list into series_name_or_list,
             accepting a list of names (or a single name)
@@ -110,7 +114,7 @@ class MegaDF(object):
                 '#27ae60',
                 '#9b59b6'] * ((len(col_name_list)+2)//3)
 
-        force_categorical = False
+        force_categorical = force_categorical
 
         count = 0
         axind = 0
@@ -171,6 +175,11 @@ class MegaDF(object):
                 x_limit = (mmn-10*buff, mmx+10*buff)
 
             if not force_categorical:
+                if dropna:
+                    orig_len = len(series)
+                    series = series.dropna()
+                    print ("Dropped {} NaNs from {} ({:.3%} of rows)".format(orig_len - len(series), col, (orig_len - len(series))/float(orig_len)))
+
                 res = ax.hist(series.values, bins=bins, alpha=0.2,
                               edgecolor='none', density=False,
                               histtype='stepfilled', color=color)
@@ -228,7 +237,7 @@ class MegaDF(object):
                                 '${1}\leq x \leq {2}$\n'
                                 '$\mu={3} \pm {4}$\n'
                                 '$\mathrm{{Md}}={5} \pm {6}$'
-                                ''.format(nn, 
+                                ''.format(nn,
                                           fmtdict['min'],
                                           fmtdict['max'],
                                           fmtdict['mean'],
@@ -294,17 +303,22 @@ class MegaDF(object):
 
                 # Only plot if there are fewer than 20 values
                 if len(series.value_counts()) < 20:
-                    ax = series.value_counts().plot(kind='bar', lw=0,
-                                                    ec='none', fc=color,
-                                                    alpha=0.2)
-                    ax = series.value_counts().plot(kind='bar', lw=3,
-                                                    ec=color, fc='none',
-                                                    alpha=0.92)
+                    vc_sorted = series.value_counts().sort_index()
+                    ax = vc_sorted.plot(kind='bar',
+                                        lw=0,
+                                        ec='none',
+                                        fc=color,
+                                        alpha=0.2)
+                    ax = vc_sorted.plot(kind='bar',
+                                        lw=3,
+                                        ec=color,
+                                        fc='none',
+                                        alpha=0.92)
                 else:
                     print ("  Too many types to plot bar, "
                            "skipping {}".format(series.name))
                 count += 1
-                
+
 
         ax.axvline(0, lw=0.5, color='black')
         fig.tight_layout()
@@ -314,7 +328,12 @@ class MegaDF(object):
 
         self.fig = fig
 
-    def pdhistloop(self, col_name_list, saveto='./plots/', dpi=144):
+    def pdhistloop(self,
+                   col_name_list,
+                   saveto='./plots/',
+                   dpi=144,
+                   nbins=100,
+                   dropna=False):
         saveto += '/'
         if not os.path.exists(saveto):
             raise ValueError('Path does not exist: {}'.format(saveto))
@@ -322,12 +341,12 @@ class MegaDF(object):
         for colstr in col_name_list:
             try:
                 res = self.pdhist(
-                    [colstr], bins=None, nbins=100, colors=None,
+                    [colstr], bins=None, nbins=nbins, colors=None,
                     fancylegend=True, labels=['Stats'], plotmad5=True,
-                    suptitle=colstr)
+                    suptitle=colstr, dropna=dropna)
                 self.fig.savefig("{0}{1}.png".format(saveto, colstr), dpi=dpi)
-            except:
-                print ("Cannot plot " + colstr)
+            except Exception as e:
+                print("Cannot plot {}: {}".format(colstr, e))
 
 
 def qcut_and_replace(df, colname, outcolname, nbins=8, precision=2):

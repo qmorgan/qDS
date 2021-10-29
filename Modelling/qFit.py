@@ -66,7 +66,7 @@ def fminfit(function, parameters, y, yerr, x=None, algorithm=None):
         return ((y-function(x))**2/(yerr**2)).sum()  # chi sq
 
     paraminit = [param() for param in parameters]
-    print "Initial Parameters: ", paraminit
+    print("Initial Parameters: ", paraminit)
     if not algorithm:
         p = scipy.optimize.fmin(errfunc, paraminit, maxfun=None,
                                 maxiter=None, full_output=1)
@@ -77,7 +77,7 @@ def fminfit(function, parameters, y, yerr, x=None, algorithm=None):
     niter = p[2]  # number of iterations
     nfunc = p[3]  # number of function calls
 
-    print "Solved Values: ", solved_values
+    print("Solved Values: ", solved_values)
     # don't really need to return this as the values are going to be
     # stored in the Param objects
     return solved_values
@@ -135,7 +135,7 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
 
     pr = """Fitting {0} free parameters on {1} datapoints...
          """.format(len(parameters), len(y))
-    print pr
+    print(pr)
 
     # If no x axis given, set x array as integral steps starting with
     # zero for the length of the y array.  For instance, if
@@ -145,18 +145,18 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
         x = np.arange(y.shape[0])  # not sure if this works
         
     if yerr is None:
-        print "Warning: No y-uncertainties specified; assuming yerr=1"
+        print("Warning: No y-uncertainties specified; assuming yerr=1")
         yerr = 1
 
     paraminit = [param() for param in parameters]
-    print 'Initial Parameters:', paraminit
+    print('Initial Parameters:', paraminit)
     # print "Parameter list:", paraminit
     # print "error function:", errfunc
     if method == 'lm':
         if bounds is not None:
-            print "WARNING: Bounds are not accepted for lm method"
+            print("WARNING: Bounds are not accepted for lm method")
         if loss is not 'linear':
-            print "WARNING: non-linear loss is not accepted for lm method"
+            print("WARNING: non-linear loss is not accepted for lm method")
             
         fitout = scipy.optimize.leastsq(errfunc, paraminit, full_output=1)
         # paramfinal = [param() for param in parameters]
@@ -192,12 +192,12 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
     # errint of 1-4 means a solution was found
     if errint not in np.arange(1, 5):
         raise Exception(mesg)
-    print info['nfev'], ' function calls required to find solution'
+    print(info['nfev'], ' function calls required to find solution')
     # print errint
     # print mesg
-    print 'Final Parameters:', paramfinal
-    print 'Covariance Matrix', covarmatrix
-    print ''
+    print('Final Parameters:', paramfinal)
+    print('Covariance Matrix', covarmatrix)
+    print('')
     # If paramfinal is not an array, make it one to avoid scripting errors
     if not isinstance(paramfinal, np.ndarray):
         paramfinal = np.array([paramfinal])
@@ -208,8 +208,8 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
     degrees_of_freedom = y.shape[0] - len(paramfinal)
     chi2r = chi2/degrees_of_freedom
 
-    print "chi^2 / dof = %.2f / %i" % (chi2, degrees_of_freedom)
-    print "reduced chi^2 = %.3f  \n" % (chi2r)
+    print("chi^2 / dof = %.2f / %i" % (chi2, degrees_of_freedom))
+    print("reduced chi^2 = %.3f  \n" % (chi2r))
 
     retdict = {'parameters': parameters, 'covarmatrix': covarmatrix,
                'chi2': chi2, 'dof': degrees_of_freedom
@@ -224,12 +224,12 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
         try:
             uncertainty = np.sqrt(retdict['covarmatrix'].diagonal()[count])
         except:
-            print "ERROR: Cannot calculate uncertainty."
+            print("ERROR: Cannot calculate uncertainty.")
             uncertainty = np.nan
         # update the uncertainty in the param object
         param.uncertainty = uncertainty
         fitstr = '{0}: {1:.3f} +/- {2:.3f}'.format(param.name, param.value, uncertainty)
-        print fitstr
+        print(fitstr)
         fitstrlist.append(fitstr)
         
         values_dict.update({param.name:param.value})
@@ -441,7 +441,7 @@ def test_fit():
     # Make simulated data:
     xvals = np.arange(100)
     zeros = np.zeros(100)
-    zipxvals = zip(xvals, zeros)
+    zipxvals = list(zip(xvals, zeros))
 
     gaussian = lambda x: 3*np.exp(-(30-x)**2/20.)
     # true values: mu = 30, height = 3, sigma = sqrt(20) = 4.472
@@ -466,7 +466,7 @@ def test_fit():
         e.g., x = [(0, 0.0), (1, 0.0), (2, 0.0),
                    (3, 0.0), (4, 0.0), (5, 0.0)]
         '''
-        xval, zero = zip(*x)  # unzip the x feature vector
+        xval, zero = list(zip(*x))  # unzip the x feature vector
         return height() * np.exp(-((xval-mu())/sigma())**2) + zero
 
     # Fit the function (provided 'data' is an array with the data to fit):
@@ -475,7 +475,7 @@ def test_fit():
     # Plot the fitted model over the data if desired
     simxvals = np.arange(10000)/100.  # 10000 points from 0-100
     simzeros = np.zeros(len(simxvals))
-    zipsimxvals = zip(simxvals, simzeros)
+    zipsimxvals = list(zip(simxvals, simzeros))
 
     fig2 = plt.figure()
     ax = fig2.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -542,7 +542,7 @@ def test_linear(fix_intercept=False, fixed_noise=False,
     fixparamlist = []
 
     # set parameters
-    for key, val in fitdict.iteritems():
+    for key, val in fitdict.items():
         param = Param(val['init'], name=key)
         fullparamlist.append(param)
         if val['fixed'] is False:
@@ -639,7 +639,7 @@ def test_linear(fix_intercept=False, fixed_noise=False,
 
     # True annotations
     textoffset = 0.7
-    for key, val in truedict.iteritems():
+    for key, val in truedict.items():
         string = '{}: {}'.format(key,val)
         fig2.text(0.2, textoffset, string, color=truthcolor,
                   alpha=0.4, size=14)
@@ -735,7 +735,7 @@ def test_fit_fmin():
     # Make simulated data:
     xvals = np.arange(100)
     zeros = np.zeros(100)
-    zipxvals = zip(xvals, zeros)
+    zipxvals = list(zip(xvals, zeros))
 
     gaussian = lambda x: 3*np.exp(-(30-x)**2/20.)
     # True values: mu = 30, height = 3, sigma = sqrt(20) = 4.472
@@ -759,7 +759,7 @@ def test_fit_fmin():
         e.g., x = [(0, 0.0), (1, 0.0), (2, 0.0),
                    (3, 0.0), (4, 0.0), (5, 0.0)]
         '''
-        xval, zero = zip(*x)  # unzip the x feature vector
+        xval, zero = list(zip(*x))  # unzip the x feature vector
         return height() * np.exp(-((xval-mu())/sigma())**2) + zero
 
     # Fit the function (provided 'data' is an array with the data to fit):
@@ -768,7 +768,7 @@ def test_fit_fmin():
     # Plot the fitted model over the data if desired
     simxvals = np.arange(10000)/100.  # 10000 points from 0-100
     simzeros = np.zeros(len(simxvals))
-    zipsimxvals = zip(simxvals, simzeros)
+    zipsimxvals = list(zip(simxvals, simzeros))
 
     fig2 = plt.figure()
     ax = fig2.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -792,7 +792,7 @@ def test_multi():
     fixparamlist = []
 
     # Set parameters
-    for key, val in fitdict.iteritems():
+    for key, val in fitdict.items():
         param = Param(val['init'], name=key)
         fullparamlist.append(param)
         if val['fixed'] is False:
@@ -896,10 +896,10 @@ def robust_least_squares_test(plot=True):
          'curve_fit_trf':curve_fit_trf,
      }
     
-    fit_types = r.keys()
+    fit_types = list(r.keys())
     for fit_type in fit_types:
         str_out_params = ['{0:.2f}'.format(val) for val in r[fit_type]['x']]
-        print '{}: {}'.format(fit_type.ljust(15), ' '.join(str_out_params))
+        print('{}: {}'.format(fit_type.ljust(15), ' '.join(str_out_params)))
     
     # TODO:
     # the least_squares, leastsq, and curve_fit methods should all be equal

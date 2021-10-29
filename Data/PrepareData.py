@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from Helpers.NotebookTools import Paths
-from Aggregate import replace_values
+from .Aggregate import replace_values
 
 
 class DataBlock(object):
@@ -50,12 +50,12 @@ class DataBlock(object):
             if df is not None:
                 self.df = df
             else:
-                print "Please specify df"
+                print("Please specify df")
                 return
 
         # TODO: Default behavior if coldict not specified?
         if not coldict:
-            print "coldict not specified; using all columns with no parameters"
+            print("coldict not specified; using all columns with no parameters")
             coldict = {}
             for key in df.columns:
                 coldict.update({key:{}})
@@ -84,10 +84,10 @@ class DataBlock(object):
         TODO: Add documentation!!
         '''
         if not hasattr(self, 'pathlist'):
-            print "DataBlock does not have pathlist specified"
+            print("DataBlock does not have pathlist specified")
             return
         if not hasattr(self, 'paths'):
-            print "DataBlock does not contain Paths object"
+            print("DataBlock does not contain Paths object")
         for path in self.pathlist:
             self.paths.add_filepath(path['name'],
                                     path['path'],
@@ -110,7 +110,7 @@ class DataBlock(object):
             desc = getattr(self,'_desc')
         
         if print_metadata:
-            print "Summary for DataFrame '{}'".format(self.name)
+            print("Summary for DataFrame '{}'".format(self.name))
         
         if dropna:
             return desc[cols].dropna()
@@ -155,7 +155,7 @@ class DataBlock(object):
 
         outstr = ("Removed {} duplicate indices"
                   "".format(len(self.df) - len(groupedfirst)))
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         # TODO: update_N()?
@@ -186,7 +186,7 @@ class DataBlock(object):
         self.update_N()
         outstr = "Marked the following # of values as missing: \n"
         outstr += str(N_before - self.N)
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         self.bool_missing_values_removed = True
@@ -230,7 +230,7 @@ class DataBlock(object):
             self.df.loc[:, col][resid == 0] = np.nan
             len2 = len(self.df.loc[:, col].dropna())
             outstr = "{}: {} repeats removed".format(col, len1 - len2)
-            print outstr
+            print(outstr)
             self.log.append(outstr)
 
             # TODO: update_N()?
@@ -245,7 +245,7 @@ class DataBlock(object):
 
             len3 = len(self.df.loc[:, col].dropna())
             outstr = "{}: {} large deltas removed".format(col, len2 - len3)
-            print outstr
+            print(outstr)
             self.log.append(outstr)
 
             # TODO: update_N()?
@@ -261,7 +261,7 @@ class DataBlock(object):
         resid = self.df.loc[:, col+'_delta']
 
         outstr = "Removing large (t-1) deltas greater than {}%".format(jump_limit*100)
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         percent_jump = (resid/series).abs()
@@ -286,9 +286,9 @@ class DataBlock(object):
             print ('WARNING suspicious entries had already been converted')
 
         rules = self.coldf['rule_list'].dropna()
-        for col, rule_list in rules.iteritems():
+        for col, rule_list in rules.items():
             outstr = 'Converted suspicious values for {}'.format(col)
-            print outstr
+            print(outstr)
             self.log.append(outstr)
 
             for rule_dict in rule_list:
@@ -332,7 +332,7 @@ class DataBlock(object):
                                'piecewise_polynomial', 'pchip']
 
         if columns is None:
-            print "Columns unspecified; applying to all columns"
+            print("Columns unspecified; applying to all columns")
             columns = self.df.columns
         self.check_columns(columns)
         
@@ -343,7 +343,7 @@ class DataBlock(object):
             for col in completely_filled_columns: 
                 outstr += ''
                 outstr += ' * {}'.format(col)
-            print outstr
+            print(outstr)
             self.log += outstr
         
         if value is not None:
@@ -351,7 +351,7 @@ class DataBlock(object):
             if method is not None:
                 raise ValueError("Either specify value OR method, not both")
             outstr = ('Imputing {} columns with value {}').format(len(columns), value)
-            print outstr 
+            print(outstr) 
             self.log += outstr
             self.df[columns].fillna(value, inplace=True)
 
@@ -359,14 +359,14 @@ class DataBlock(object):
             if method in fillna_methods:
                 outstr = ('Imputing {} columns using fillna method {} '
                           'and limit {}').format(len(columns), method, limit)
-                print outstr 
+                print(outstr) 
                 self.log += outstr
                 # Seem to need to do it this way to update in place
                 self.df.loc[:,columns] = self.df.loc[:,columns].fillna(method=method, axis=0, limit=limit)
             elif method in interpolate_methods:
                 outstr = ('Imputing {} columns using interpolate method {} '
                           'and limit {}').format(len(columns), method, limit)
-                print outstr 
+                print(outstr) 
                 self.log += outstr
                 self.df.loc[:,columns] = self.df.loc[:,columns].interpolate(method=method, axis=0, limit=limit)
             elif method == 'cubic_spline_0_smoothing':
@@ -375,7 +375,7 @@ class DataBlock(object):
                 # much faster (http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html#scipy.interpolate.UnivariateSpline)
                 outstr = ('Imputing {} columns using interpolate method {} '
                           'and limit {}').format(len(columns), method, limit)
-                print outstr 
+                print(outstr) 
                 self.log += outstr
                 self.df.loc[:,columns] = self.df.loc[:,columns].interpolate(method='spline', order=3, s=0., axis=0, limit=limit)
                 
@@ -383,7 +383,7 @@ class DataBlock(object):
                 raise ValueError("Method {} not in acceptable fillna/"
                                  "interpolate methods".format(method))
         else:
-            print "Nothing to do.. specify value or method"
+            print("Nothing to do.. specify value or method")
             self.log += "WARNING: Tried to impute.. but no method specified"
 
         # TODO: update_N()?
@@ -423,7 +423,7 @@ class DataBlock(object):
         # ts2.shift(1,freq='4min').resample('2min')
 
         if self.bool_time_shifts_applied:
-            print "Warning: Time shifts already applied!"
+            print("Warning: Time shifts already applied!")
             # raise Exception("Time shifts already applied; cannot re-apply")
         # keep original
         # self.df_unshifted = self.df
@@ -432,7 +432,7 @@ class DataBlock(object):
         for col in col_list:
             timelag = self.coldf.loc[col]['t_shift']
             newstr = "{0}-{1:d}x{2}".format(col, int(timelag), freq)
-            print "Adding {}".format(newstr)
+            print("Adding {}".format(newstr))
             self.log.append("Adding {}".format(newstr))
 
             self.df[newstr] = self.df[col].shift(timelag,
@@ -472,14 +472,14 @@ class DataBlock(object):
         # Mark original missing values as missing
         if persist_missing:
             outstr = "{}: Marking original missing vals as missing".format(newname)
-            print outstr
+            print(outstr)
             self.log.append(outstr)
             self.df.loc[self.df[col].isnull(), newname] = np.nan
 
         # mark where the previous value is missing as missing as well
         if make_previous_missing:
             outstr = "{}: Marking values with missing (t-1) value as missing".format(newname)
-            print outstr
+            print(outstr)
             self.log.append(outstr)
             self.df.loc[self.df[col].shift(1).isnull(), newname] = np.nan
 
@@ -509,10 +509,10 @@ class DataBlock(object):
         self.df_copy = self.df.copy()  # TODO: change this name
         self.df = pd.DataFrame(columns=self.df_copy.columns)
         for col in self.df.columns:
-            print 'Resampling {}'.format(col)
+            print('Resampling {}'.format(col))
             self.df[col] = self.df_copy[col].resample(freq, how=how)
         outstr = "{} resampled to {}".format(how, freq)
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         # TODO: update_N()?
@@ -522,7 +522,7 @@ class DataBlock(object):
         '''
         self.df.loc[:, feature_name] = function
         outstr = 'Adding feature: {}'.format(feature_name)
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         # TODO: update_N()?
@@ -535,15 +535,15 @@ class DataBlock(object):
         
         # if not, I should have updated somewhere
         if (N.sum() != self.N.sum()):
-            print "WARNING: Should have updated N?"
+            print("WARNING: Should have updated N?")
         
         msg = "Remaining Missing Values:\n"
         self.log.append(msg)
-        print msg
+        print(msg)
 
         # N_missing = self.N*-1 + len(self.df)
         N_missing = self.describe().loc['missing']
-        print N_missing
+        print(N_missing)
         self.log.append(N_missing)
 
     def drop_missing(self, columns=None):
@@ -551,7 +551,7 @@ class DataBlock(object):
         missing'''
 
         if columns is None:
-            print "Columns unspecified; applying to all columns"
+            print("Columns unspecified; applying to all columns")
             columns = self.df.columns
         self.check_columns(columns)
         old_len = len(self.df)
@@ -559,7 +559,7 @@ class DataBlock(object):
         new_len = len(self.df)
         outstr = ("Dropped {} rows with NaN in columns:{}"
                   "".format(old_len-new_len, columns))
-        print outstr
+        print(outstr)
         self.log.append(outstr)
 
         # TODO: update_N()?
@@ -578,9 +578,9 @@ class DataBlock(object):
         If not, raise an error. 
         '''
         if columns is None:
-            print "Available columns: "
+            print("Available columns: ")
             for col in self.df.columns:
-                print "'{}',".format(col)
+                print("'{}',".format(col))
             return
         else:
             columns = list(columns)
@@ -601,7 +601,7 @@ class DataBlock(object):
             new_length = len(self.df.columns)
             outstr = ("Retained {} columns ({} removed)"
                       "".format(new_length, old_length-new_length))
-            print outstr
+            print(outstr)
             self.log.append(outstr)
 
         # TODO: update_N()?
@@ -611,7 +611,7 @@ class DataBlock(object):
             TODO: Make this a method of Model Class instead of DataBlock?
             TODO: Add documentation!!
         '''
-        print "WARNING: DEPRECIATED. Column Selection now in Models module."
+        print("WARNING: DEPRECIATED. Column Selection now in Models module.")
         self.check_columns(columns=columns)
         if columns:
             self.training_columns = columns
@@ -621,7 +621,7 @@ class DataBlock(object):
             TODO: Make this a method of Model Class instead of DataBlock?
             TODO: Add documentation!!
         '''
-        print "WARNING: DEPRECIATED. Column Selection now in Models module."
+        print("WARNING: DEPRECIATED. Column Selection now in Models module.")
         self.check_columns(columns=[column])
         if column:
             if hasattr(self, 'training_columns'):
@@ -646,7 +646,7 @@ class BCData(DataBlock):
                  ):
 
         if not coldict:
-            print "Please specify coldict"
+            print("Please specify coldict")
             return
 
         self.paths = Paths('PBMining')
@@ -657,15 +657,15 @@ class BCData(DataBlock):
         try:
             merged_df = pd.read_pickle(self.paths.datafilename)
         except:
-            print "Cannot load the data..."
+            print("Cannot load the data...")
             raise IOError("Cannot load the data")
 
         try:
             datadict_df = pd.read_pickle(self.paths.dictfilename)
         except:
-            print "Cannot load the data dict.. "
+            print("Cannot load the data dict.. ")
 
-        self.df = merged_df[coldict.keys()]
+        self.df = merged_df[list(coldict.keys())]
         self.df_raw = self.df.copy()
 
         DataBlock.__init__(self, coldict=coldict)
@@ -712,11 +712,11 @@ class BCData(DataBlock):
             self.df['current_Bzn'] = self.df['PbTailXRAYData_ZincAssay']
             self.df['previous_Bzn_preresampling'] = self.df['PbTailXRAYData_ZincAssay'].shift(timelag)
         except:
-            print "Problem with grabbing pre-resampledPbTail Assay"
+            print("Problem with grabbing pre-resampledPbTail Assay")
         try:
             self.df['previous_Bzn_postresampling'] = self.df['PbTailXRAYData_ZincAssay-3x5min']
         except:
-            print "Problem with grabbing post-resampled PbTail Assay"
+            print("Problem with grabbing post-resampled PbTail Assay")
 
     def test_function(self):
         return self.df.ZnConcX_RayData__ZnValue
