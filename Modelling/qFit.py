@@ -9,6 +9,7 @@ import os
 import sys
 import scipy.stats as stats
 
+from matplotlib import gridspec
 
 class Param:
     '''Parameter for model fitting.
@@ -83,15 +84,15 @@ def fminfit(function, parameters, y, yerr, x=None, algorithm=None):
     return solved_values
 
 
-def fit(function, parameters, y, yerr=None, x=None, return_covar=False, 
-        method='lm', bounds=None, loss='linear'):
+def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
+        method='lm', bounds=None, loss='linear', verbose=True):
     '''Fit performs a simple least-squares fit on a function.  To use:
-    
+
     method can be one of ['lm','trf','dogbox'], as accepted by curve_fit
     'lm' calls leastsq, the others call least_squares
-    
+
     TODO: Add ability for bounded problems (trf & dogbox only) and loss functions
-    
+
     bounds : 2-tuple of array_like, optional
         Lower and upper bounds on independent variables. Defaults to no bounds.
         Each array must match the size of x0 or be a scalar, in the latter case
@@ -135,7 +136,8 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
 
     pr = """Fitting {0} free parameters on {1} datapoints...
          """.format(len(parameters), len(y))
-    print(pr)
+    if verbose:
+        print(pr)
 
     # If no x axis given, set x array as integral steps starting with
     # zero for the length of the y array.  For instance, if
@@ -143,21 +145,25 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
     # then x will be x = array([0, 1, 2, 3])
     if x is None:
         x = np.arange(y.shape[0])  # not sure if this works
-        
+
     if yerr is None:
-        print("Warning: No y-uncertainties specified; assuming yerr=1")
+        if verbose:
+            print("Warning: No y-uncertainties specified; assuming yerr=1")
         yerr = 1
 
     paraminit = [param() for param in parameters]
-    print('Initial Parameters:', paraminit)
-    # print "Parameter list:", paraminit
-    # print "error function:", errfunc
+    if verbose:
+        print('Initial Parameters:', paraminit)
+        # print "Parameter list:", paraminit
+        # print "error function:", errfunc
     if method == 'lm':
         if bounds is not None:
-            print("WARNING: Bounds are not accepted for lm method")
+            if verbose:
+                print("WARNING: Bounds are not accepted for lm method")
         if loss is not 'linear':
-            print("WARNING: non-linear loss is not accepted for lm method")
-            
+            if verbose:
+                print("WARNING: non-linear loss is not accepted for lm method")
+
         fitout = scipy.optimize.leastsq(errfunc, paraminit, full_output=1)
         # paramfinal = [param() for param in parameters]
         paramfinal = fitout[0]
@@ -165,23 +171,23 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
         info = fitout[2]
         mesg = fitout[3]
         errint = fitout[4]
-    
+
     # Could in principle call least_squares regardless since it wraps around
     # leastsq as well if method == 'lm', but the 'full_output' kwarg is only
-    # used in the leastsq method.  
+    # used in the leastsq method.
     # Need to calculate the covarmatrix if least_squares is used; see curve_fit.
-    # However the covarmatrix returned by leastsq is different than that 
-    # returned by curve_fit; the latter is multiplied by chi2/dof 
-    elif method == 'trf' or method == 'dogbox': 
+    # However the covarmatrix returned by leastsq is different than that
+    # returned by curve_fit; the latter is multiplied by chi2/dof
+    elif method == 'trf' or method == 'dogbox':
         if bounds is None:
             bounds=(-np.inf, np.inf)
-        fitout = scipy.optimize.least_squares(errfunc, 
-                                              paraminit, 
-                                              method=method, 
+        fitout = scipy.optimize.least_squares(errfunc,
+                                              paraminit,
+                                              method=method,
                                               bounds=bounds,
                                               loss=loss)
         paramfinal = fitout['x']
-        covarmatrix = None #FIXME 
+        covarmatrix = None #FIXME
         errint = fitout['status']
         mesg = fitout['message']
         info = {'nfev':fitout['nfev']}
@@ -192,12 +198,15 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
     # errint of 1-4 means a solution was found
     if errint not in np.arange(1, 5):
         raise Exception(mesg)
-    print(info['nfev'], ' function calls required to find solution')
-    # print errint
-    # print mesg
-    print('Final Parameters:', paramfinal)
-    print('Covariance Matrix', covarmatrix)
-    print('')
+
+    if verbose:
+        print(info['nfev'], ' function calls required to find solution')
+        # print errint
+        # print mesg
+        print('Final Parameters:', paramfinal)
+        print('Covariance Matrix', covarmatrix)
+        print('')
+
     # If paramfinal is not an array, make it one to avoid scripting errors
     if not isinstance(paramfinal, np.ndarray):
         paramfinal = np.array([paramfinal])
@@ -208,8 +217,9 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
     degrees_of_freedom = y.shape[0] - len(paramfinal)
     chi2r = chi2/degrees_of_freedom
 
-    print("chi^2 / dof = %.2f / %i" % (chi2, degrees_of_freedom))
-    print("reduced chi^2 = %.3f  \n" % (chi2r))
+    if verbose:
+        print("chi^2 / dof = %.2f / %i" % (chi2, degrees_of_freedom))
+        print("reduced chi^2 = %.3f  \n" % (chi2r))
 
     retdict = {'parameters': parameters, 'covarmatrix': covarmatrix,
                'chi2': chi2, 'dof': degrees_of_freedom
@@ -224,17 +234,19 @@ def fit(function, parameters, y, yerr=None, x=None, return_covar=False,
         try:
             uncertainty = np.sqrt(retdict['covarmatrix'].diagonal()[count])
         except:
-            print("ERROR: Cannot calculate uncertainty.")
+            if verbose:
+                print("ERROR: Cannot calculate uncertainty.")
             uncertainty = np.nan
         # update the uncertainty in the param object
         param.uncertainty = uncertainty
         fitstr = '{0}: {1:.3f} +/- {2:.3f}'.format(param.name, param.value, uncertainty)
-        print(fitstr)
+        if verbose:
+            print(fitstr)
         fitstrlist.append(fitstr)
-        
+
         values_dict.update({param.name:param.value})
         uncertainties_dict.update({param.name:param.uncertainty})
-        
+
         count += 1
     retdict.update({'strings': fitstrlist,
                     'values': values_dict,
@@ -486,11 +498,11 @@ def test_fit():
     return retdict
 
 
-def test_linear(fix_intercept=False, fixed_noise=False, 
+def test_linear(fix_intercept=False, fixed_noise=False,
                 method='lm', loss='linear', include_outlier=False):
     '''
-    Test the leastsq algorithm on a toy linear model with heteroscedastic 
-    errors. 
+    Test the leastsq algorithm on a toy linear model with heteroscedastic
+    errors.
     '''
     import matplotlib.pyplot as plt
 
@@ -515,7 +527,7 @@ def test_linear(fix_intercept=False, fixed_noise=False,
                            0.39672636,  0.2270063 , -1.02623091, -0.78666783,  0.2448412 ])
     else:
         noise = scipy.randn(20)
-            
+
     ydata = noise*est_y_err+ydata_true  # adding noise to the data
     yerr = np.zeros(20)+est_y_err  # array of uncertainties
 
@@ -576,26 +588,35 @@ def test_linear(fix_intercept=False, fixed_noise=False,
     simzeros = np.zeros(len(simxvals))
 
     fig2 = plt.figure()
-    ax = fig2.add_axes([0.1, 0.1, 0.8, 0.8])
+    # ax = fig2.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    # set height ratios for subplots
+    gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1])
+    ax = plt.subplot(gs[0])
 
     # plot the underlying truth
     ax.plot(simxvals, linear(simxvals), lw=7, alpha=0.4, color=truthcolor)
 
     # Fit the function (provided 'data' is an array with the data to fit):
     retdict = fit(f, fitparamlist, ydata, yerr, xvals, method=method, loss=loss)
-    ax.plot(simxvals, f(simxvals), lw=2, color=model1color)
+    model1y = f(simxvals)
+    model1y_all = f(xvals)
+    ax.plot(simxvals, model1y, lw=2, color=model1color)
 
-    # Now assuming tiny/no error equal to the mean of the real errors 
+    # Now assuming tiny/no error equal to the mean of the real errors
     # yerr_wrong = np.zeros(len(yerr))+yerr.mean()
-    yerr_wrong = None
+    # yerr_wrong = None
+    yerr_wrong=10
     # Fit the function (provided 'data' is an array with the data to fit):
     retdictnoerror = fit(f, fitparamlist, ydata, yerr_wrong, xvals, method=method, loss=loss)
-    ax.plot(simxvals, f(simxvals), lw=2, color=model2color)
+    model2y = f(simxvals)
+    model2y_all = f(xvals)
+    ax.plot(simxvals, model2y, lw=2, color=model2color)
 
     # Plot the data with error bars
     ax.errorbar(xvals, ydata, yerr=yerr, fmt='o', color=truthcolor, lw=2, capthick=2)
     ax.errorbar(xvals, ydata, yerr=yerr_wrong, fmt='.', color=truthcolor, ecolor=model2color, capsize=0)
-    
+
     if include_outlier:
         # plot the outlier again in a different color
         ax.plot([xvals[outlier_index]],[outlier_val], color='pink',marker='o')
@@ -605,8 +626,9 @@ def test_linear(fix_intercept=False, fixed_noise=False,
 
     # bottom left annotations
     xloc = 0.2
-    textoffset = 0.16
-    textincrement = 0.04
+    # textoffset = 0.16
+    textoffset = 0.36
+    textincrement = 0.02
     textsize = 12
     color = model1color
     modeldict = retdict
@@ -622,8 +644,9 @@ def test_linear(fix_intercept=False, fixed_noise=False,
 
     # bottom right annotations
     xloc = 0.55
-    textoffset = 0.16
-    textincrement = 0.04
+    # textoffset = 0.16
+    textoffset = 0.36
+    textincrement = 0.02
     textsize = 12
     color = model2color
     modeldict = retdictnoerror
@@ -654,8 +677,16 @@ def test_linear(fix_intercept=False, fixed_noise=False,
         string = '{}: {}'.format(myparam.name,myparam.value)
         fig2.text(0.7, textoffset, string, alpha=0.4, size=14)
         textoffset -= 0.04
-    
+
     ax.set_title("Method '{}' with loss function '{}'".format(method,loss))
+
+    # plot residuals
+    ax1 = plt.subplot(gs[1], sharex = ax)
+    ax1.errorbar(xvals, ydata - model1y_all, yerr=yerr, fmt='o', color=model1color, lw=2, capthick=2)
+    ax1.errorbar(xvals, ydata - model2y_all, yerr=yerr_wrong, fmt='.', color=model2color, ecolor=model2color, capsize=0)
+    ax1.axhline(0, ls='--', lw=0.5, color='black')
+    plt.subplots_adjust(hspace=.0)
+
     fig2.show()
     return retdict
 
@@ -810,7 +841,7 @@ def test_multi():
 
 def robust_least_squares_test(plot=True):
     '''http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html#scipy.optimize.least_squares
-    
+
     scipy version 0.17.0 introduced the least_squares method, which unlike
     the leastsq method, allows for bounds on the variables and also has an
     option for including a loss function rho(s) for more robust estimates
@@ -838,7 +869,7 @@ def robust_least_squares_test(plot=True):
 
     t_train = np.linspace(t_min, t_max, n_points)
     y_train = gen_data(t_train, a, b, c, noise=0.1, n_outliers=3)
-    
+
     def fun(t, a, b, c):
         return a + b * np.exp(c * t)
 
@@ -847,27 +878,27 @@ def robust_least_squares_test(plot=True):
         return fun(t, x[0], x[1], x[2]) - y
 
     x0 = np.array([1.0, 1.0, 0.0])
-    
+
     res_lsq = least_squares(cost_fun, x0, args=(t_train, y_train))
-    
+
     res_soft_l1 = least_squares(cost_fun, x0, loss='soft_l1', f_scale=0.1,
                                 args=(t_train, y_train))
     res_log = least_squares(cost_fun, x0, loss='cauchy', f_scale=0.1,
                             args=(t_train, y_train))
 
-    # grab the outputs from the legacy leastsq for comparison 
+    # grab the outputs from the legacy leastsq for comparison
     fitout = leastsq(cost_fun, x0, full_output=1, args=(t_train, y_train))
     res_leastsq = {'x':fitout[0], 'cov':fitout[1], 'msg':fitout[3], 'status':fitout[4]}
     res_leastsq.update(fitout[2])
-    
-    # 'lm' uses the legacy leastsq method and is the default for unconstrained 
+
+    # 'lm' uses the legacy leastsq method and is the default for unconstrained
     # problems using curve_fit as of scipy 0.17.0
     curve_out =  curve_fit(fun, t_train, y_train, p0=x0, method='lm', full_output=1)
-    
+
     curve_fit_lm = {'x':curve_out[0], 'pcov':curve_out[1], 'msg':curve_out[3], 'status':curve_out[4]}
     curve_fit_lm.update(curve_out[2])
 
-    # trf is trust-region reflective method, which can deal with constrained problems.  Called through least_squares method. 
+    # trf is trust-region reflective method, which can deal with constrained problems.  Called through least_squares method.
     curve_out = curve_fit(fun, t_train, y_train, p0=x0, method='trf')
     curve_fit_trf = {'x':curve_out[0], 'pcov':curve_out[1]}
 
@@ -877,7 +908,7 @@ def robust_least_squares_test(plot=True):
         y_lsq = gen_data(t_test, *res_lsq.x)
         y_soft_l1 = gen_data(t_test, *res_soft_l1.x)
         y_log = gen_data(t_test, *res_log.x)
-        
+
         plt.plot(t_train, y_train, 'o')
         plt.plot(t_test, y_true, 'k', linewidth=2, label='true')
         plt.plot(t_test, y_lsq, label='linear loss')
@@ -887,7 +918,7 @@ def robust_least_squares_test(plot=True):
         plt.ylabel("y")
         plt.legend()
         plt.show()
-    
+
     r = {'least_squares':res_lsq,
          'soft_l1':res_soft_l1,
          'cauchy':res_log,
@@ -895,30 +926,30 @@ def robust_least_squares_test(plot=True):
          'curve_fit_lm':curve_fit_lm,
          'curve_fit_trf':curve_fit_trf,
      }
-    
+
     fit_types = list(r.keys())
     for fit_type in fit_types:
         str_out_params = ['{0:.2f}'.format(val) for val in r[fit_type]['x']]
         print('{}: {}'.format(fit_type.ljust(15), ' '.join(str_out_params)))
-    
+
     # TODO:
     # the least_squares, leastsq, and curve_fit methods should all be equal
-    # note there's a difference in the cov_x returned by leastsq and the pcov 
-    # returned by curve_fit.  
+    # note there's a difference in the cov_x returned by leastsq and the pcov
+    # returned by curve_fit.
     # http://stackoverflow.com/questions/14581358/getting-standard-errors-on-fitted-parameters-using-the-optimize-leastsq-method-i
     # http://stackoverflow.com/questions/14854339/in-scipy-how-and-why-does-curve-fit-calculate-the-covariance-of-the-parameter-es/14857441#14857441
-    # basically pcov = cov_x*chi^2/dof  
-    # TODO: am i calculating the parameter uncertainties correctly in qFit, given this information? 
-    
-    # but really, bootstrap methods should be used to calculate the uncertainties anyway 
-    
-    return r 
+    # basically pcov = cov_x*chi^2/dof
+    # TODO: am i calculating the parameter uncertainties correctly in qFit, given this information?
+
+    # but really, bootstrap methods should be used to calculate the uncertainties anyway
+
+    return r
 
 def plot_robust_fit_example_1():
     '''Fitting a gaussian sampled sine with polynomial of order 3
-    
+
     Shows difference between OLS, Theil-Sen, RANSAC regressions
-    
+
     '''
     from matplotlib import pyplot as plt
     import numpy as np
@@ -979,7 +1010,7 @@ def plot_robust_fit_example_1():
         plt.ylim(-2, 10.2)
         plt.title(title)
     plt.show()
-    
+
 
 def plot_robust_fit_example_2():
     '''Fitting a uniformly sampled sine with polynomial of order 5'''
@@ -1042,4 +1073,3 @@ def plot_robust_fit_example_2():
         plt.ylim(-2, 10.2)
         plt.title(title)
     plt.show()
-    
